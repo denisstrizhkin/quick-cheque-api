@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  container-back:
+    ports:
+      - "127.0.0.1:8080:5000"
+    build:
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/var/app
+    env_file: .env
+
+  container-db:
+    image: "postgres:14-bullseye"
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    env_file: .env
