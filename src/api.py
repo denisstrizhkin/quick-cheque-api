@@ -6,7 +6,7 @@ import os
 # Flask app
 app = Flask(__name__)
 
-# Secret Key
+# Flask config
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY')
 
 # DB connection
@@ -73,3 +73,7 @@ class User(db.Model):
     password = db.Column(db.String(102), nullable=False)
     photo_url = db.Column(db.String(100))
 
+
+def init_db():
+    db.drop_all()
+    db.create_all()
