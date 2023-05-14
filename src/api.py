@@ -259,7 +259,7 @@ def room_to_dic(id, is_admin):
 
     members = []
     for member in room.members:
-        user = User.query.filter_by(id=member.user_id).first()
+        user = User.query.filter_by(id=member.member_id).first()
         members.append({
             "id" : user.id,
             "name" : user.name,
