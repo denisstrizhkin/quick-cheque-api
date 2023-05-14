@@ -19,6 +19,7 @@ GET_ROOMS_MEMBER_URL = API_URL + "/get_rooms_member"
 GET_ROOMS_URL = API_URL + "/get_rooms"
 
 JOIN_ROOM_URL = API_URL + "/join_room"
+LEAVE_ROOM_URL = API_URL + "/leave_room"
 DELETE_MEMBER_URL = API_URL + "/delete_member"
 
 ADD_CHEQUE_URL = API_URL + "/add_cheque"
@@ -116,28 +117,16 @@ def test_add_rooms():
 def test_join_room():
     print('### test_join_rooms (get_rooms_member) ###')
 
-    resp = create_user('a')
-    (id_a, token_a) = get_token('a')
+    user_a, user_x = create_user('a')
+    token_a, token_x = get_token(user_a)
     
-    resp = create_user('b')
-    (id_b, token_b) = get_token('b')
+    user_b, user_x = create_user('b')
+    token_b, token_x = get_token(user_b)
     
-    data = {
-        'token': token_a,
-        'name': 'room'
-    }
-    x = requests.post(ADD_ROOM_URL, json=data)
-    print(x.status_code, x.text)
-    x = requests.post(GET_ROOMS_ADMIN_URL, json=data)
-    print(x.status_code, x.text)
+    room, room_x = add_room(token_a, 'room') 
 
-    room_id = json.loads(x.text)['message'][0]['id']
-    data = {
-        'token': token_b,
-        'id': room_id
-    }
-    x = requests.post(JOIN_ROOM_URL, json=data)
-    print(x.status_code, x.text)
+    x = requests.post(JOIN_ROOM_URL, headers={'x-acces-token':token}, json={'id':room})
+    print(x.text)
 
     data = {
         'token': token_a,

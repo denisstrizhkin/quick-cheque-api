@@ -81,6 +81,7 @@ class User(db.Model):
 
     rooms = db.relationship('Room', backref='user')
     members = db.relationship('Members', backref='user')
+    cheques = db.relationship('Cheque', backref='user')
 
 
 class Room(db.Model):
@@ -92,7 +93,23 @@ class Room(db.Model):
         nullable = False
     )
 
+    cheques = db.relationship('Cheque', backref='room')
     members = db.relationship('Members', backref='room')
+
+
+class Cheque(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), nullable=False)
+    room_id = db.Column(
+        db.Integer,
+        db.ForeignKey('room.id', ondelete='CASCADE'),
+        nullable = False
+    )
+    owner_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id', ondelete='CASCADE'),
+        nullable = False
+    )
 
 
 class Members(db.Model):
@@ -237,16 +254,38 @@ def delete_room(json, user):
     return jsonify({ 'msg' : f'room deleted - {json["id"]}' }) 
 
 
+def room_to_dic(id):
+    room = Room.query.filter_by(id=id).first()
+
+    members = []
+    for member in room.members:
+        user = User.query.filter_by(id=member.user_id).first()
+        members.append({
+            "id" : user.id,
+            "name" : user.name,
+            "email" : user.email,
+        })
+
+    dic = {
+        'id' : room.id,
+        'name' : room.name,
+        'owner_id' : room.owner_id,
+        'cheque_cnt' : len(Cheque.query.filter_by(
+            room_id=room.id,
+            owner_id=room.owner_id
+        ).all()),
+        'member' : members
+    }
+
+    return dic
+
+
 @app.route('/get_rooms_admin', methods=['GET'])
 @token_required
 def get_rooms_admin(user):
     rooms = []
     for room in user.rooms:
-        rooms.append({
-            'id' : room.id,
-            'name' : room.name,
-            'owner_id' : room.owner_id
-        })
+        rooms.append(room_to_dic(room.id))
 
     return jsonify({ 'msg' : rooms })
 
@@ -257,11 +296,8 @@ def get_rooms_member(user):
     rooms = []
     for member in user.members:
         room = Room.query.filtery_by(id=member.room_id).first()
-        rooms.append({
-            'id' : room.id,
-            'name' : room.name,
-            'owner_id' : room.owner_id
-        })
+        rooms.append(room_to_dic(room.id))
+
     return jsonify({ 'msg' : rooms })
 
 
@@ -300,3 +336,47 @@ def leave_room(json, user):
     db.session.commit()
 
     return jsonify({ 'msg' : 'user have left the room' })
+
+
+@app.route('/add_cheque', methods=['POST'])
+@token_required
+@fields_required(['room_id', 'name'])
+def add_cheque(json, user):
+    cheque = Cheque(
+        name=json['name'],
+        room_id=json['room_id'],
+        owner_id=user.id
+    )
+    db.session.add(cheque)
+    db.session.commit()
+
+    return jsonify({ 'msg' : 'cheque added', 'id' : cheque.id })
+
+
+@app.route('/get_cheques', methods=['POST'])
+@token_required
+@fields_required(['id'])
+def get_cheques(json, user):
+    cheques = []
+    for cheque in Cheque.query.filter_by(
+            owner_id=user.id, room_id=json['id']
+        ).all():
+        cheques.append({
+            'id' : cheque.id,
+            'name' : cheque.name,
+            'owner_id' : cheque.owner_id,
+            'room_id' : cheque.room_id
+        })
+
+    return jsonify({ 'msg' : cheques })
+
+
+@app.route('/delete_cheque', methods=['POST'])
+@token_required
+@fields_required(['id'])
+def delete_cheque(json, user):
+    cheque = Cheque.query.filter_by(owner_id=user.id, id=json['id']).first()
+    if not cheque:
+        return jsonify({ 'msg' : f"user does not have cheque - {json['id']}"}), 400
+
+    return jsonify({ 'msg' : 'cheque deleted' })
