@@ -254,7 +254,7 @@ def delete_room(json, user):
     return jsonify({ 'msg' : f'room deleted - {json["id"]}' }) 
 
 
-def room_to_dic(id):
+def room_to_dic(id, is_admin):
     room = Room.query.filter_by(id=id).first()
 
     members = []
@@ -274,39 +274,47 @@ def room_to_dic(id):
             room_id=room.id,
             owner_id=room.owner_id
         ).all()),
-        'member' : members
+        'member' : members,
+        'admin' : is_admin
     }
 
     return dic
 
 
+def rooms_admin(user):
+    rooms = []
+    for room in user.rooms:
+        room.append(room_to_dic(room.id, is_admin=True))
+    return rooms
+
+
+def rooms_member(user):
+    rooms = []
+    for member in user.members:
+        room = Room.query.filtery_by(id=member.room_id).first()
+        rooms.append(room_to_dic(room.id, is_admin=False))
+    return rooms
+
+
 @app.route('/get_rooms_admin', methods=['GET'])
 @token_required
 def get_rooms_admin(user):
-    rooms = []
-    for room in user.rooms:
-        rooms.append(room_to_dic(room.id))
-
+    rooms = rooms_admin(user)
     return jsonify({ 'msg' : rooms })
 
 
 @app.route('/get_rooms_member', methods=['GET'])
 @token_required
 def get_rooms_member(user):
-    rooms = []
-    for member in user.members:
-        room = Room.query.filtery_by(id=member.room_id).first()
-        rooms.append(room_to_dic(room.id))
-
+    rooms = rooms_member(user)
     return jsonify({ 'msg' : rooms })
 
 
-"""
-@app.route('get_rooms', methods=['GET'])
+@app.route('/get_rooms', methods=['GET'])
 @token_required
 def get_rooms(user):
-    return ''
-"""
+    rooms = rooms_member(user) + rooms_admin(user)
+    return jsonify({ 'msg' : rooms })
 
 
 @app.route('/join_room', methods=['POST'])
