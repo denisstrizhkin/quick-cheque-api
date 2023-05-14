@@ -284,7 +284,7 @@ def room_to_dic(id, is_admin):
 def rooms_admin(user):
     rooms = []
     for room in user.rooms:
-        room.append(room_to_dic(room.id, is_admin=True))
+        rooms.append(room_to_dic(room.id, is_admin=True))
     return rooms
 
 
