@@ -378,10 +378,18 @@ def add_cheque(json, user):
     return jsonify({ 'msg' : 'cheque added', 'id' : cheque.id })
 
 
-@app.route('/get_cheques', methods=['POST'])
+@app.route('/delete_cheque', methods=['POST'])
 @token_required
 @fields_required(['id'])
-def get_cheques(json, user):
+def delete_cheque(json, user):
+    cheque = Cheque.query.filter_by(owner_id=user.id, id=json['id']).first()
+    if not cheque:
+        return jsonify({ 'msg' : f"user does not have cheque - {json['id']}"}), 400
+
+    return jsonify({ 'msg' : 'cheque deleted' })
+
+
+def cheques_member(user):
     cheques = []
     for cheque in Cheque.query.filter_by(
             owner_id=user.id, room_id=json['id']
@@ -394,14 +402,29 @@ def get_cheques(json, user):
         })
 
     return jsonify({ 'msg' : cheques })
+    rooms = []
+    for member in user.room_members:
+        room = Room.query.filtery_by(id=member.room_id).first()
+        rooms.append(room_to_dic(room.id, is_admin=False))
+    return rooms
 
 
-@app.route('/delete_cheque', methods=['POST'])
+@app.route('/get_cheques_admin', methods=['GET'])
 @token_required
-@fields_required(['id'])
-def delete_cheque(json, user):
-    cheque = Cheque.query.filter_by(owner_id=user.id, id=json['id']).first()
-    if not cheque:
-        return jsonify({ 'msg' : f"user does not have cheque - {json['id']}"}), 400
+def get_rooms_admin(user):
+    rooms = rooms_admin(user)
+    return jsonify({ 'msg' : rooms })
 
-    return jsonify({ 'msg' : 'cheque deleted' })
+
+@app.route('/get_cheques_member', methods=['GET'])
+@token_required
+def get_rooms_member(user):
+    rooms = rooms_member(user)
+    return jsonify({ 'msg' : rooms })
+
+
+@app.route('/get_cheques', methods=['GET'])
+@token_required
+def get_rooms(user):
+    rooms = rooms_member(user) + rooms_admin(user)
+    return jsonify({ 'msg' : rooms })
