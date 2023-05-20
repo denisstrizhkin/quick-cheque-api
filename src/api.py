@@ -80,8 +80,10 @@ class User(db.Model):
     photo_url = db.Column(db.String(100))
 
     rooms = db.relationship('Room', backref='user')
-    members = db.relationship('Members', backref='user')
+    room_members = db.relationship('RoomMembers', backref='user')
+    
     cheques = db.relationship('Cheque', backref='user')
+    cheque_members = db.relationship('ChequeMembers', backref='user')
 
 
 class Room(db.Model):
@@ -94,7 +96,7 @@ class Room(db.Model):
     )
 
     cheques = db.relationship('Cheque', backref='room')
-    members = db.relationship('Members', backref='room')
+    room_members = db.relationship('RoomMembers', backref='room')
 
 
 class Cheque(db.Model):
@@ -112,7 +114,22 @@ class Cheque(db.Model):
     )
 
 
-class Members(db.Model):
+class RoomMembers(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    member_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id', ondelete='CASCADE'),
+        nullable = False
+    )
+    room_id = db.Column(
+        db.Integer,
+        db.ForeignKey('room.id', ondelete='CASCADE'),
+        nullable = False
+    )
+    __table_args__ = (db.UniqueConstraint('member_id', 'room_id'),)
+
+
+class ChequeMembers(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     member_id = db.Column(
         db.Integer,
@@ -258,7 +275,7 @@ def room_to_dic(id, is_admin):
     room = Room.query.filter_by(id=id).first()
 
     members = []
-    for member in room.members:
+    for member in room.room_members:
         user = User.query.filter_by(id=member.member_id).first()
         members.append({
             "id" : user.id,
@@ -290,7 +307,7 @@ def rooms_admin(user):
 
 def rooms_member(user):
     rooms = []
-    for member in user.members:
+    for member in user.room_members:
         room = Room.query.filtery_by(id=member.room_id).first()
         rooms.append(room_to_dic(room.id, is_admin=False))
     return rooms
@@ -321,11 +338,11 @@ def get_rooms(user):
 @token_required
 @fields_required(['id'])
 def join_room(json, user):
-    member = Members.query.filter_by(member_id=user.id, room_id=json['id']).first()
+    member = RoomMembers.query.filter_by(member_id=user.id, room_id=json['id']).first()
     if member:
         return jsonify({ 'msg' : 'this user have already joined' }), 400
 
-    member = Members(member_id=user.id, room_id=json['id'])
+    member = RoomMembers(member_id=user.id, room_id=json['id'])
     db.session.add(member)
     db.session.commit()
 
@@ -336,7 +353,7 @@ def join_room(json, user):
 @token_required
 @fields_required(['id'])
 def leave_room(json, user):
-    member = Members.query.filter_by(member_id=user.id, room_id=json['id']).first()
+    member = RoomMembers.query.filter_by(member_id=user.id, room_id=json['id']).first()
     if not member:
         return jsonify({ 'msg' : 'user haven\'t joined this room' }), 400
 
