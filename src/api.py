@@ -310,7 +310,7 @@ def rooms_admin(user):
 def rooms_member(user):
     rooms = []
     for member in user.room_members:
-        room = Room.query.filtery_by(id=member.room_id).first()
+        room = Room.query.filter_by(id=member.room_id).first()
         rooms.append(room_to_dic(room.id, is_admin=False))
     return rooms
 
