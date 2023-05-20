@@ -459,7 +459,7 @@ def cheques_admin(user):
 def cheques_member(user):
     cheques = []
     for member in user.cheque_members:
-        cheque = Cheque.query.filtery_by(id=member.room_id).first()
+        cheque = Cheque.query.filter_by(id=member.room_id).first()
         cheques.append(room_to_dic(cheque.id, is_admin=False))
     return cheques
 
