@@ -113,6 +113,8 @@ class Cheque(db.Model):
         nullable = False
     )
 
+    cheque_members = db.relationship('ChequeMembers', backref='cheque')
+
 
 class RoomMembers(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -136,12 +138,12 @@ class ChequeMembers(db.Model):
         db.ForeignKey('user.id', ondelete='CASCADE'),
         nullable = False
     )
-    room_id = db.Column(
+    cheque_id = db.Column(
         db.Integer,
-        db.ForeignKey('room.id', ondelete='CASCADE'),
+        db.ForeignKey('cheque.id', ondelete='CASCADE'),
         nullable = False
     )
-    __table_args__ = (db.UniqueConstraint('member_id', 'room_id'),)
+    __table_args__ = (db.UniqueConstraint('member_id', 'cheque_id'),)
 
 
 def init_db():
@@ -456,7 +458,7 @@ def cheques_admin(user):
 
 def cheques_member(user):
     cheques = []
-    for member in user.chequ_members:
+    for member in user.cheque_members:
         cheque = Cheque.query.filtery_by(id=member.room_id).first()
         cheques.append(room_to_dic(cheque.id, is_admin=False))
     return cheques
