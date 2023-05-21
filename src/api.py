@@ -406,7 +406,7 @@ def delete_cheque(json, user):
 @token_required
 @fields_required([ 'id', 'room_id' ])
 def join_cheque(json, user):
-    cheque = Cheque.query.filter_by(id=json['id'], room_id=json['id']).first()
+    cheque = Cheque.query.filter_by(id=json['id'], room_id=json['room_id']).first()
     if cheque is None:
         return jsonify({ 'msg' : f'room {json["room_id"]} does not have cheque {json["id"]}' })
 
