@@ -451,11 +451,17 @@ def cheque_to_dic(id, room_id, is_admin):
             "name" : user.name,
             "email" : user.email,
         })
+    
+    owner = User.query.filter_by(id=cheque.owner_id).first()
 
     dic = {
         'id' : cheque.id,
         'name' : cheque.name,
-        'owner_id' : cheque.owner_id,
+        'owner' : {
+          'id' : owner.id,
+          'name' : owner.name,
+          'email' : owner.email
+        },
         'room_id' : cheque.room_id,
         'sum' : 0,
         'member' : members,
