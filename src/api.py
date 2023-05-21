@@ -438,8 +438,10 @@ def leave_cheque(json, user):
     return jsonify({ 'msg' : 'user have left the cheque' })
 
 
-def cheque_to_dic(id, is_admin):
+def cheque_to_dic(id, room_id, is_admin):
     cheque = Cheque.query.filter_by(id=id).first()
+    if cheque.room_id != room_id:
+      return None
 
     members = []
     for member in cheque.cheque_members:
@@ -467,6 +469,9 @@ def cheques_admin(user, room_id):
     cheques = []
     for cheque in user.cheques:
         cheques.append(cheque_to_dic(cheque.id, room_id, is_admin=True))
+        dic = cheque_to_dic(cheque.id, room_id, is_admin=False)
+        if dic:
+          cheques.append(dic)
     return cheques
 
 
@@ -474,7 +479,9 @@ def cheques_member(user, room_id):
     cheques = []
     for member in user.cheque_members:
         cheque = Cheque.query.filter_by(id=member.cheque_id).first()
-        cheques.append(cheque_to_dic(cheque.id, room_id, is_admin=False))
+        dic = cheque_to_dic(cheque.id, room_id, is_admin=False)
+        if dic:
+          cheques.append(dic)
     return cheques
 
 
@@ -496,5 +503,9 @@ def get_cheques_member(user):
 @token_required
 @fields_required(['room_id'])
 def get_cheques(json, user):
-    cheques = cheques_member(user, json['room_id']) + cheques_admin(user, json['room_id'])
+    room = Room.query.filter_by(id=json['room_id']).first()
+    if room is None:
+      return jsonify({ 'msg' : f'room {json["room_id"]} does not exist' })
+
+    cheques = cheques_member(user, room.id) + cheques_admin(user, room.id)
     return jsonify({ 'msg' : cheques})
