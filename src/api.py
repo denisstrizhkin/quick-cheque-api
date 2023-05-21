@@ -507,11 +507,11 @@ def get_cheques_member(user):
 
 @app.route('/get_cheques', methods=['POST'])
 @token_required
-@fields_required(['room_id'])
+@fields_required(['id'])
 def get_cheques(json, user):
-    room = Room.query.filter_by(id=json['room_id']).first()
+    room = Room.query.filter_by(id=json['id']).first()
     if room is None:
-      return jsonify({ 'msg' : f'room {json["room_id"]} does not exist' })
+      return jsonify({ 'msg' : f'room {json["id"]} does not exist' })
 
     cheques = cheques_member(user, room.id) + cheques_admin(user, room.id)
     return jsonify({ 'msg' : cheques})
