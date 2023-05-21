@@ -471,7 +471,7 @@ def cheque_to_dic(id, room_id, is_admin):
 def cheques_admin(user, room_id):
     cheques = []
     for cheque in user.cheques:
-        dic = cheque_to_dic(cheque.id, room_id, is_admin=False)
+        dic = cheque_to_dic(cheque.id, room_id, is_admin=True)
         if dic:
           cheques.append(dic)
     return cheques
