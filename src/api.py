@@ -479,8 +479,7 @@ def cheques_admin(user, room_id):
 
 def cheques_member(user, room_id):
     cheques = []
-    for member in user.cheque_members:
-        cheque = Cheque.query.filter_by(id=member.cheque_id).first()
+    for cheque in Cheque.query.filter_by(room_id=room_id).all():
         dic = cheque_to_dic(cheque.id, room_id, is_admin=False)
         if dic:
           cheques.append(dic)
