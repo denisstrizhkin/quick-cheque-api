@@ -295,10 +295,7 @@ def room_to_dic(id, is_admin):
           'name' : owner.name,
           'email' : owner.email
         },
-        'cheque_cnt' : len(Cheque.query.filter_by(
-            room_id=room.id,
-            owner_id=room.owner_id
-        ).all()),
+        'cheque_cnt' : len(Cheque.query.filter_by(room_id=room.id).all()),
         'member' : members,
         'admin' : is_admin
     }
