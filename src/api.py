@@ -229,7 +229,12 @@ def login(json):
         'exp' : datetime.datetime.utcnow() + datetime.timedelta(days=30)
     }, app.config['SECRET_KEY'], algorithm="HS256")
 
-    return jsonify({ 'token' : token, 'id' : user.id })
+    return jsonify({
+      'token' : token,
+      'id' : user.id,
+      'email' : user.email,
+      'name' : user.name
+     })
 
 
 @app.route('/auth', methods=['GET'])
