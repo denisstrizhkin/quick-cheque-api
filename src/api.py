@@ -343,7 +343,7 @@ def get_rooms(user):
 @token_required
 @fields_required(['id'])
 def join_room(json, user):
-    room = Room.query.filter_by(room_id=json['id']).first()
+    room = Room.query.filter_by(id=json['id']).first()
     if room is None:
       return jsonify({ 'msg' : f'room {json["id"]} does not exist' }), 400
 
@@ -362,7 +362,7 @@ def join_room(json, user):
 @token_required
 @fields_required(['id'])
 def leave_room(json, user):
-    room = Room.query.filter_by(room_id=json['id']).first()
+    room = Room.query.filter_by(id=json['id']).first()
     if room is None:
       return jsonify({ 'msg' : f'room {json["id"]} does not exist' }), 400
 
