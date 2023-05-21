@@ -285,10 +285,16 @@ def room_to_dic(id, is_admin):
             "email" : user.email,
         })
 
+    owner = User.query.filter_by(id=room.owner_id).first()
+
     dic = {
         'id' : room.id,
         'name' : room.name,
-        'owner_id' : room.owner_id,
+        'owner' : {
+          'id' : owner.id,
+          'name' : owner.name,
+          'email' : owner.email
+        },
         'cheque_cnt' : len(Cheque.query.filter_by(
             room_id=room.id,
             owner_id=room.owner_id
