@@ -340,8 +340,12 @@ def get_rooms(user):
 @token_required
 @fields_required(['id'])
 def join_room(json, user):
-    member = RoomMembers.query.filter_by(member_id=user.id, room_id=json['id']).first()
-    if member:
+    room = Room.query.filter_by(room_id=json['id']).first()
+    if room is None:
+      return jsonify({ 'msg' : f'room {json["id"]} does not exist' }), 400
+
+    member = RoomMembers.query.filter_by(member_id=user.id, room_id=room.id).first()
+    if member or room.owner_id == user.id:
         return jsonify({ 'msg' : 'this user have already joined' }), 400
 
     member = RoomMembers(member_id=user.id, room_id=json['id'])
@@ -355,6 +359,10 @@ def join_room(json, user):
 @token_required
 @fields_required(['id'])
 def leave_room(json, user):
+    room = Room.query.filter_by(room_id=json['id']).first()
+    if room is None:
+      return jsonify({ 'msg' : f'room {json["id"]} does not exist' }), 400
+
     member = RoomMembers.query.filter_by(member_id=user.id, room_id=json['id']).first()
     if not member:
         return jsonify({ 'msg' : 'user haven\'t joined this room' }), 400
@@ -449,18 +457,18 @@ def cheque_to_dic(id, is_admin):
     return dic
 
 
-def cheques_admin(user):
+def cheques_admin(user, room_id):
     cheques = []
     for cheque in user.cheques:
-        cheques.append(cheque_to_dic(cheque.id, is_admin=True))
+        cheques.append(cheque_to_dic(cheque.id, room_id, is_admin=True))
     return cheques
 
 
-def cheques_member(user):
+def cheques_member(user, room_id):
     cheques = []
     for member in user.cheque_members:
         cheque = Cheque.query.filter_by(id=member.cheque_id).first()
-        cheques.append(cheque_to_dic(cheque.id, is_admin=False))
+        cheques.append(cheque_to_dic(cheque.id, room_id, is_admin=False))
     return cheques
 
 
@@ -478,8 +486,9 @@ def get_cheques_member(user):
     return jsonify({ 'msg' : cheques})
 
 
-@app.route('/get_cheques', methods=['GET'])
+@app.route('/get_cheques', methods=['POST'])
 @token_required
-def get_cheques(user):
-    cheques = cheques_member(user) + cheques_admin(user)
+@fields_required(['room_id'])
+def get_cheques(json, user):
+    cheques = cheques_member(user, json['room_id']) + cheques_admin(user, json['room_id'])
     return jsonify({ 'msg' : cheques})
